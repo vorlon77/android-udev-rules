@@ -12,13 +12,9 @@
 ACTION!="add", ACTION!="bind", GOTO="android_usb_rules_end"
 SUBSYSTEM!="usb", GOTO="android_usb_rules_end"
 
-# For Android devices that enable this universal rule suggested here:
-# http://ktnr74.blogspot.com/2013/04/universal-udev-rule-for-all-android.html
-# Commented as a reminder (we prefer a punctual device detection)
-# ENV{ID_USB_INTERFACES}=="*:ff420?:*", SYMLINK+="android/$env{ID_SERIAL_SHORT}", GOTO="android_usb_rule_match"
-
-# Skip testing for unexpected devices like hubs or printers
+# Skip testing for unexpected devices like hubs, controllers or printers
 ATTR{bDeviceClass}=="09", GOTO="android_usb_rules_end"
+ENV{ID_MODEL}=="Controller", GOTO="android_usb_rules_end"
 ENV{ID_USB_INTERFACES}=="*:0701??:*", ENV{adb_adb}="yes", GOTO="android_usb_rules_end"
 
 LABEL="android_usb_rules_begin"
@@ -129,7 +125,6 @@ ATTR{idProduct}=="9015", ENV{adb_adb}="yes"
 ATTR{idProduct}=="9039", ENV{adb_adb}="yes"
 ATTR{idProduct}=="904e", ENV{adb_adb}="yes"
 ATTR{idProduct}=="90dc", ENV{adb_adb}="yes"
-ATTR{idProduct}=="90bb", ENV{adb_adb}="yes", ENV{midi_user}="yes"
 GOTO="android_usb_rule_match"
 LABEL="not_Fairphone2"
 
@@ -163,8 +158,11 @@ ATTR{idProduct}=="4ee6", ENV{adb_adb}="yes"
 ATTR{idProduct}=="4ee7", ENV{adb_adb}="yes"
 ATTR{idProduct}=="4ee9", ENV{adb_adb}="yes"
 
+#   Tensor Pixel phones (Pixel 6/6A/6 Pro) 4eeb=cdc-ncm; 4eec=cdc-ncm,adb
+ATTR{idProduct}=="4eec", ENV{adb_adb}="yes"
+
 #   Pixel C Tablet
-ATTR{idProduct}=="5201", ENV{adb_fast}="yes"
+ATTR{idProduct}=="5201", ENV{adb_adbfast}="yes"
 ATTR{idProduct}=="5203", ENV{adb_adb}="yes"
 ATTR{idProduct}=="5208", ENV{adb_adb}="yes"
 
@@ -368,6 +366,8 @@ LABEL="not_LG"
 
 # Meizu
 ATTR{idVendor}!="2a45", GOTO="not_Meizu"
+#   M1E
+ATTR{idProduct}=="0c01", ENV{adb_adb}="yes"
 #   MX6
 ATTR{idProduct}=="0c02", ENV{adb_adb}="yes"
 GOTO="android_usb_rule_match"
@@ -483,6 +483,13 @@ ATTR{idProduct}=="2764", SYMLINK+="libmtp-%k", ENV{ID_MTP_DEVICE}="1", ENV{ID_ME
 ATTR{idProduct}=="2769", ENV{adb_adb}="yes"
 #   Oppo Watch, fastboot
 ATTR{idProduct}=="2024", ENV{adb_user}="yes"
+#   RMX3231 - Realme C11 20221, normal, rndis, mtp
+ATTR{idProduct}=="200e", ENV{adb_user}="yes"
+ATTR{idProduct}=="2028", ENV{adb_user}="yes"
+ATTR{idProduct}=="2026", ENV{adb_user}="yes"
+#   OnePlus 8T (22d9:2771=adb,PTP, 22d9:2772=adb,MTP)
+ATTR{idProduct}=="2771", ENV{adb_adb}="yes"
+ATTR{idProduct}=="2772", SYMLINK+="libmtp-%k", ENV{ID_MTP_DEVICE}="1", ENV{ID_MEDIA_PLAYER}="1"
 GOTO="android_usb_rule_match"
 LABEL="not_Oppo"
 
@@ -513,6 +520,15 @@ ATTR{idVendor}!="2a48", GOTO="not_Point_Mobile"
 ATTR{idProduct}=="5101", ENV{adb_user}="yes"
 GOTO="android_usb_rule_match"
 LABEL="not_Point_Mobile"
+
+# Polar
+ATTR{idVendor}!="0da4", GOTO="not_Polar"
+ENV{adb_user}="yes"
+#   Polar M600 (0010=adb,000b=fastboot)
+ATTR{idProduct}=="0010", SYMLINK+="android_adb"
+ATTR{idProduct}=="000b", SYMLINK+="android_fastboot"
+GOTO="android_usb_rule_match"
+LABEL="not_Polar"
 
 # Qualcomm (Wearners also 05c6)
 ATTR{idVendor}!="05c6", GOTO="not_Qualcomm"
@@ -687,6 +703,9 @@ ATTR{idProduct}=="96e7", ENV{adb_adb}="yes"
 GOTO="android_usb_rule_match"
 LABEL="not_Unitech_Electronics"
 
+# Vivo
+ATTR{idVendor}=="2d95", ENV{adb_user}="yes"
+
 # Wileyfox
 ATTR{idVendor}=="2970", ENV{adb_user}="yes"
 
@@ -767,6 +786,12 @@ ATTR{idProduct}=="1351", ENV{adb_adb}="yes"
 ATTR{idProduct}=="1354", ENV{adb_adb}="yes"
 #   P685M LTE modem
 ATTR{idProduct}=="1275", ENV{adb_user}="yes"
+#   MF286[A] internal LTE modem
+ATTR{idProduct}=="1432", ENV{adb_user}="yes"
+#   MF286D internal LTE modem
+ATTR{idProduct}=="1485", ENV{adb_user}="yes"
+#   MF286R internal LTE modem
+ATTR{idProduct}=="1489", ENV{adb_user}="yes"
 #   Nubia / RedMagic Series (NX***)
 #   See https://github.com/TadiT7/nubia_nx619j_dump/blob/NX619J-user-9-PKQ1.180929.001-eng.nubia.20181220.181559-release-keys/vendor/etc/init/hw/init.nubia.usb.rc
 #   ptp,adb

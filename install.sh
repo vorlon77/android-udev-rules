@@ -1,15 +1,9 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
-SELECTED_USER="$1"
 CURRENT_UID="$(id -u)"
 
-if [ "$SELECTED_USER" = "" ]; then
-  echo "Please specify a user!"
-  exit 1
-fi
-
 if [ "$CURRENT_UID" -ne 0 ]; then
-  echo "Please run using sudo!"
+  echo "Please run as root!"
   exit 1
 fi
 
@@ -18,16 +12,19 @@ if [ "$USE_SYMLINK" = "true" ]; then
 else
   cp -v 51-android.rules /etc/udev/rules.d/51-android.rules
 fi
+
 chmod a+r /etc/udev/rules.d/51-android.rules
+
 if [ "$USE_GROUP" = "false" ]; then
-  mkdir -p /usr/lib/sysusers.d/ && sudo cp android-udev.conf /usr/lib/sysusers.d/
+  install -Dm644 android-udev.conf \
+    /usr/lib/sysusers.d/android-udev.conf
   systemd-sysusers
 else
-  groupdel adbusers
-  groupadd adbusers
+  getent group 'adbusers' >/dev/null ||
+    groupadd -f 'adbusers'
 fi
 
-usermod -a -G adbusers "$USER"
+usermod -a -G adbusers "$(logname)"
 udevadm control --reload-rules
 
 if [ "$USE_SERVICE_CMD" = "true" ]; then
